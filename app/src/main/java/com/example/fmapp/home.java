@@ -3,12 +3,14 @@ package com.example.fmapp;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
+import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -28,22 +30,58 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.squareup.picasso.Picasso;
 
+import java.io.IOException;
 import java.util.ArrayList;
 
 public class home extends Fragment {
-    //    DatabaseReference firebaseDatabase;
     TextView text;
     ImageView img;
     ProgressBar prog;
     Bitmap notifyimg;
+    Button player;
+    Boolean butn = true;
+    String linkk;
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.home_fragment, container, false);
 
-       prog = v.findViewById(R.id.prog);
+        prog = v.findViewById(R.id.prog);
         img = v.findViewById(R.id.homeimg);
         text = v.findViewById(R.id.show_name);
+        player = v.findViewById(R.id.player);
+
+        playsong();
         firebase();
+
+        player.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                MediaPlayer mp = new MediaPlayer();
+                if(butn)
+                {
+                    player.setBackgroundResource(R.drawable.ic_baseline_pause_24);
+                    butn = false;
+                    if (linkk != null) {
+                        try {
+                            mp.setDataSource(linkk);
+                            mp.prepare();
+                        }
+                        catch (IOException ex)
+                        {
+                            Toast.makeText(getContext(), "not Ready", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                    mp.start();
+                }
+                else
+                {
+                    player.setBackgroundResource(R.drawable.ic_baseline_play_arrow_24);
+                    butn = true;
+                    mp.pause();
+                    mp.stop();
+                }
+            }
+        });
         return v;
     }
 
@@ -69,8 +107,6 @@ public class home extends Fragment {
                 notifyimg = BitmapFactory.decodeFile(url);
                 Picasso.get().load(url).fit().into(img);
                 prog.setVisibility(View.INVISIBLE);
-
-//                Toast.makeText(getContext(), ""+uplo, Toast.LENGTH_LONG).show();
                        }
 
             @Override
@@ -79,4 +115,18 @@ public class home extends Fragment {
 
             }
         });}
+        public void playsong()
+        {
+                FirebaseDatabase.getInstance().getReference("playsongs").addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                              linkk =  snapshot.getValue(String.class);
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+
+                    }
+                });
+        }
 }

@@ -20,6 +20,7 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.Log;
 import android.view.Display;
 import android.view.MenuItem;
 import android.view.View;
@@ -47,7 +48,6 @@ public class MainActivity extends AppCompatActivity {
     NotificationManagerCompat notificationManager;
     String name;
     Notification notificationn;
-    String url;
     Bitmap notifyimg = null;
 
     @Override
@@ -55,6 +55,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        getfireimg();
         getfire();
 
         notificationManager = NotificationManagerCompat.from(this);
@@ -103,48 +104,49 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void getfire() {
+
         FirebaseDatabase.getInstance().getReference("show_name").addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 String name1 = snapshot.getValue(String.class);
                 name = name1;
                 notifications();
+                getfireimg();
             }
-
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-
-            }
-        });
-        FirebaseDatabase.getInstance().getReference("home").addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-
-                Picasso.get().load(snapshot.getValue().toString()).into(new Target() {
-                    @Override
-                    public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
-                        // loaded bitmap is here (bitmap)
-                        notifyimg = bitmap;
-                        notifications();
-                    }
-
-                    @Override
-                    public void onBitmapFailed(Exception e, Drawable errorDrawable) {
-                        Toast.makeText(MainActivity.this, ""+e, Toast.LENGTH_SHORT).show();
-                    }
-
-
-                    @Override
-                    public void onPrepareLoad(Drawable placeHolderDrawable) {}
-                });
-
-            }
-
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
 
             }
         });}
 
+        public void getfireimg(){
+        FirebaseDatabase.getInstance().getReference("home").addValueEventListener(new ValueEventListener() {
+        @Override
+        public void onDataChange(@NonNull DataSnapshot snapshot) {
+
+            Picasso.get().load(snapshot.getValue().toString()).into(new Target() {
+                @Override
+                public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
+                    // loaded bitmap is here (bitmap)
+                    System.out.println("inside bitmap");
+                    notifyimg = bitmap;
+                    notifications();
+                }
+
+                @Override
+                public void onBitmapFailed(Exception e, Drawable errorDrawable) {
+                    Toast.makeText(MainActivity.this, ""+e, Toast.LENGTH_SHORT).show();
+                }
+
+                @Override
+                public void onPrepareLoad(Drawable placeHolderDrawable) {
+                }
+            });
+
+        }
+        @Override
+        public void onCancelled(@NonNull DatabaseError error) {
+
+        }
+    });}
 }

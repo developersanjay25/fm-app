@@ -35,19 +35,13 @@ public class info extends Fragment {
         View v = inflater.inflate(R.layout.info_fragment,null,false);
 
 
-
-
-//        layoutManager1 = ;
-
        recyclerView1 = v.findViewById(R.id.recyclerviewlive);
        recyclerView2 = v.findViewById(R.id.recyclerview2);
        progressBar = v.findViewById(R.id.prog_info);
 
-        adapter2 = new adapter2(arrayList1);
-        recyclerView1.setAdapter(adapter2);
-
         recyclerview2();
         recyclerview1();
+
 
         FirebaseDatabase.getInstance().getReference("info").addValueEventListener(new ValueEventListener() {
             @Override
@@ -66,13 +60,15 @@ public class info extends Fragment {
                 Toast.makeText(getContext(), ""+error, Toast.LENGTH_SHORT).show();
             }
         });
+        adapter2 = new adapter2(arrayList1);
+        recyclerView1.setAdapter(adapter2);
+
         return v;
     }
     public void recyclerview1()
     {
         recyclerView1.setLayoutManager(new LinearLayoutManager(getContext(),LinearLayoutManager.HORIZONTAL,false));
         arrayList1 = new ArrayList<>();
-
     }
     public void recyclerview2()
     {
