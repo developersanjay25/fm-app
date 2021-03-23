@@ -1,11 +1,15 @@
 package com.example.fmapp;
 
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,6 +17,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
+import android.widget.RemoteViews;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -28,9 +33,11 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
+import com.google.gson.Gson;
 import com.squareup.picasso.Picasso;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 
 public class home extends Fragment {
@@ -38,9 +45,10 @@ public class home extends Fragment {
     ImageView img;
     ProgressBar prog;
     Bitmap notifyimg;
-    Button player;
-    Boolean butn = true;
-    String linkk;
+    static Button player;
+    public String linkk;
+    static MediaPlayer mp;
+    static MainActivity mainActivity;
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.home_fragment, container, false);
@@ -49,40 +57,55 @@ public class home extends Fragment {
         img = v.findViewById(R.id.homeimg);
         text = v.findViewById(R.id.show_name);
         player = v.findViewById(R.id.player);
-
+        mp = new MediaPlayer();
+         mainActivity = new MainActivity();
         playsong();
         firebase();
+        final MainActivity mainActivity = new MainActivity();
+        mainActivity.storingmediaplayer(mp);
 
         player.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                MediaPlayer mp = new MediaPlayer();
-                if(butn)
+                if(mp.isPlaying())
                 {
-                    player.setBackgroundResource(R.drawable.ic_baseline_pause_24);
-                    butn = false;
-                    if (linkk != null) {
-                        try {
-                            mp.setDataSource(linkk);
-                            mp.prepare();
-                        }
-                        catch (IOException ex)
-                        {
-                            Toast.makeText(getContext(), "not Ready", Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                    mp.start();
+                    player.setBackgroundResource(R.drawable.ic_baseline_play_arrow_24);
+//                    MainActivity.pauseplaynoti = R.drawable.ic_baseline_play_arrow_24;
+                    mp.pause();
+                    mainActivity.changebuttoniconn(R.drawable.ic_baseline_play_arrow_24);
                 }
                 else
                 {
-                    player.setBackgroundResource(R.drawable.ic_baseline_play_arrow_24);
-                    butn = true;
-                    mp.pause();
-                    mp.stop();
+                    player.setBackgroundResource(R.drawable.ic_baseline_pause_24);
+//                    MainActivity.pauseplaynoti = R.drawable.ic_baseline_pause_24;
+                    mp.start();
+                    mainActivity.changebuttoniconn(R.drawable.ic_baseline_pause_24);
                 }
             }
         });
+//        SharedPreferences sharedPref = getContext().getSharedPreferences("mysharedpref",Context.MODE_PRIVATE);
+//        SharedPreferences.Editor editor = sharedPref.edit();
+//        Gson gson = new Gson();
+//        String json = gson.toJson(mp);
+//        editor.putString("MyObject", json);
+//        editor.commit();
         return v;
+    }
+    public static void pauseplayer()
+    {
+
+        if(mp.isPlaying())
+        {
+            player.setBackgroundResource(R.drawable.ic_baseline_play_arrow_24);
+            mp.pause();
+            mainActivity.changebuttoniconn(R.drawable.ic_baseline_play_arrow_24);
+        }
+        else
+        {
+            player.setBackgroundResource(R.drawable.ic_baseline_pause_24);
+            mp.start();
+            mainActivity.changebuttoniconn(R.drawable.ic_baseline_play_arrow_24);
+        }
     }
 
     public void firebase() {
@@ -101,13 +124,14 @@ public class home extends Fragment {
 
         FirebaseDatabase.getInstance().getReference("home").addValueEventListener(new ValueEventListener() {
             @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
+            public void onDataChange(@NonNull DataSnapshot snapshot)
+            {
                 String url = snapshot.getValue(String.class);
 
                 notifyimg = BitmapFactory.decodeFile(url);
                 Picasso.get().load(url).fit().into(img);
                 prog.setVisibility(View.INVISIBLE);
-                       }
+            }
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
@@ -120,7 +144,25 @@ public class home extends Fragment {
                 FirebaseDatabase.getInstance().getReference("playsongs").addValueEventListener(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot snapshot) {
-                              linkk =  snapshot.getValue(String.class);
+                        linkk =  snapshot.getValue(String.class);
+                        if (linkk != null) {
+                            try {
+                                    mp.reset();
+                                    mp.setDataSource(linkk);
+                                    mp.prepare();
+                                    player.setBackgroundResource(R.drawable.ic_baseline_pause_24);
+                                    mp.seekTo(0);
+                                    mp.start();
+                               }
+                            catch (IOException ex)
+                            {
+                                Toast.makeText(getContext(), "not Ready", Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                        else
+                        {
+                            Toast.makeText(getContext(), "Link is empty", Toast.LENGTH_SHORT).show();
+                        }
                     }
 
                     @Override
@@ -128,5 +170,13 @@ public class home extends Fragment {
 
                     }
                 });
-        }
+                }
+
+    @Override
+    public void onDestroy() {
+        mp.stop();
+        mp.release();
+        super.onDestroy();
+    }
 }
+

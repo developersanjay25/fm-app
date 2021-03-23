@@ -5,11 +5,15 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 
 import android.app.ActionBar;
+import android.app.AlertDialog;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
@@ -17,6 +21,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
+import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -45,35 +50,44 @@ import java.util.logging.LogRecord;
 import io.grpc.okhttp.internal.framed.FrameReader;
 
 public class MainActivity extends AppCompatActivity {
-    NotificationManagerCompat notificationManager;
+    static NotificationManagerCompat notificationManager;
     String name;
-    Notification notificationn;
+    static Notification notificationn;
     Bitmap notifyimg = null;
+    Intent startintent;
+    MediaPlayer mp;
+    int pauseplaynoti;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+        pauseplaynoti = R.drawable.ic_baseline_play_arrow_24;
         getfireimg();
         getfire();
+
+        final home home = new home();
+        final info info = new info();
+        final FragmentManager fragmentManager = getSupportFragmentManager();
+
+        fragmentManager.beginTransaction().add(R.id.frame_layout,home,"1").show(home).commit();
+        fragmentManager.beginTransaction().add(R.id.frame_layout,info,"2").hide(info).commit();
 
         notificationManager = NotificationManagerCompat.from(this);
 
         BottomNavigationView bottomNavigationView = findViewById(R.id.bottomnav);
 
-        getSupportFragmentManager().beginTransaction().replace(R.id.frame_layout, new home()).commit();
+//        getSupportFragmentManager().beginTransaction().replace(R.id.frame_layout, new home()).commit();
 
         bottomNavigationView.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-                Fragment selectedfrag = null;
                 switch (item.getItemId()) {
                     case R.id.Home:
-                        getSupportFragmentManager().beginTransaction().replace(R.id.frame_layout, new home()).commit();
+                        fragmentManager.beginTransaction().hide(info).show(home).commit();
                         break;
                     case R.id.info:
-                        getSupportFragmentManager().beginTransaction().replace(R.id.frame_layout, new info()).commit();
+                        fragmentManager.beginTransaction().hide(home).show(info).commit();
                         break;
                 }
 //                getSupportFragmentManager().beginTransaction().replace(R.id.frame_layout, selectedfrag).commit();
@@ -83,22 +97,25 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void notifications() {
-        Intent startintent = new Intent(this, MainActivity.class);
+        startintent = new Intent(this,MainActivity.class);
         PendingIntent startactivity = PendingIntent.getActivity(this, 0, startintent, 0);
-        
+
+        Intent playpause = new Intent(this,pauseplay.class);
+        PendingIntent playpausepend = PendingIntent.getBroadcast(this,0,playpause,0);
+
         notificationn = new NotificationCompat.Builder(this, app.CHANNEL_1)
-                    .setSmallIcon(R.drawable.imggg)
-                    .setAutoCancel(false)
-                    .setLargeIcon(notifyimg)
-                    .setContentTitle("Tamil fm")
-                    .setContentText(name)
-                    .setContentIntent(startactivity)
-                    .setPriority(NotificationCompat.PRIORITY_HIGH)
-                    .setChannelId(app.CHANNEL_1)
-                    .setOngoing(true)
-                    .addAction(R.drawable.ic_baseline_play_arrow_24, "Play", startactivity)
-                    .setStyle(new androidx.media.app.NotificationCompat.MediaStyle().setShowActionsInCompactView(0))
-                    .build();
+                       .setSmallIcon(R.drawable.imggg)
+                       .setAutoCancel(false)
+                       .setLargeIcon(notifyimg)
+                       .setContentTitle("Tamil fm")
+                       .setContentText(name)
+                       .setContentIntent(startactivity)
+                       .setPriority(NotificationCompat.PRIORITY_HIGH)
+                       .setChannelId(app.CHANNEL_1)
+                       .setOngoing(true)
+                       .addAction(pauseplaynoti , "Play", playpausepend)
+                       .setStyle(new androidx.media.app.NotificationCompat.MediaStyle().setShowActionsInCompactView(0))
+                       .build();
 
             notificationManager.notify(0, notificationn);
     }
@@ -145,8 +162,33 @@ public class MainActivity extends AppCompatActivity {
 
         }
         @Override
-        public void onCancelled(@NonNull DatabaseError error) {
+        public void onCancelled(@NonNull DatabaseError error)
+        {
 
         }
-    });}
+    });
+    }
+    void storingmediaplayer(MediaPlayer mp)
+    {
+        this.mp = mp;
+    }
+    public void changebuttoniconn(int img)
+    {
+        pauseplaynoti = img;
+    }
+    @Override
+    public void onBackPressed() {
+        AlertDialog.Builder alertDialog = new AlertDialog.Builder(this);
+        alertDialog.setMessage("Do you want to exit");
+        alertDialog.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                MainActivity.super.onBackPressed();
+                finishAndRemoveTask();
+            }
+        });
+        alertDialog.setNegativeButton("Cancel", null);
+        alertDialog.setCancelable(false);
+        alertDialog.show();
+    }
 }
