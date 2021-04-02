@@ -52,17 +52,15 @@ import io.grpc.okhttp.internal.framed.FrameReader;
 public class MainActivity extends AppCompatActivity {
     static NotificationManagerCompat notificationManager;
     String name;
-    static Notification notificationn;
+    Notification notificationn;
     Bitmap notifyimg = null;
     Intent startintent;
     MediaPlayer mp;
-    int pauseplaynoti;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        pauseplaynoti = R.drawable.ic_baseline_play_arrow_24;
         getfireimg();
         getfire();
 
@@ -97,13 +95,22 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void notifications() {
-        startintent = new Intent(this,MainActivity.class);
+        startintent = new Intent(this ,MainActivity.class);
         PendingIntent startactivity = PendingIntent.getActivity(this, 0, startintent, 0);
 
         Intent playpause = new Intent(this,pauseplay.class);
         PendingIntent playpausepend = PendingIntent.getBroadcast(this,0,playpause,0);
 
-        notificationn = new NotificationCompat.Builder(this, app.CHANNEL_1)
+        int pauseplaynoti;
+        if (home.mp.isPlaying())
+        {
+            pauseplaynoti = R.drawable.ic_baseline_pause_24;
+        }
+        else
+        {
+            pauseplaynoti = R.drawable.ic_baseline_play_arrow_24;
+        }
+        notificationn = new NotificationCompat.Builder(this,app.CHANNEL_1)
                        .setSmallIcon(R.drawable.imggg)
                        .setAutoCancel(false)
                        .setLargeIcon(notifyimg)
@@ -161,21 +168,23 @@ public class MainActivity extends AppCompatActivity {
             });
 
         }
-        @Override
-        public void onCancelled(@NonNull DatabaseError error)
-        {
+            @Override
+            public void onCancelled(@NonNull DatabaseError error)
+            {
 
-        }
+            }
     });
+    }
+    void changebuttoniconn()
+    {
+//        notifications();
+//        notificationManager.notify(0, notificationn);
     }
     void storingmediaplayer(MediaPlayer mp)
     {
         this.mp = mp;
     }
-    public void changebuttoniconn(int img)
-    {
-        pauseplaynoti = img;
-    }
+
     @Override
     public void onBackPressed() {
         AlertDialog.Builder alertDialog = new AlertDialog.Builder(this);
