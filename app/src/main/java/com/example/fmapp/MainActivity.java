@@ -52,7 +52,7 @@ import io.grpc.okhttp.internal.framed.FrameReader;
 public class MainActivity extends AppCompatActivity {
     static NotificationManagerCompat notificationManager;
     String name;
-    Notification notificationn;
+    static NotificationCompat.Builder notificationn;
     Bitmap notifyimg = null;
     Intent startintent;
     MediaPlayer mp;
@@ -110,7 +110,7 @@ public class MainActivity extends AppCompatActivity {
         {
             pauseplaynoti = R.drawable.ic_baseline_play_arrow_24;
         }
-        notificationn = new NotificationCompat.Builder(this,app.CHANNEL_1)
+        notificationn = new NotificationCompat.Builder(this)
                        .setSmallIcon(R.drawable.imggg)
                        .setAutoCancel(false)
                        .setLargeIcon(notifyimg)
@@ -121,10 +121,7 @@ public class MainActivity extends AppCompatActivity {
                        .setChannelId(app.CHANNEL_1)
                        .setOngoing(true)
                        .addAction(pauseplaynoti , "Play", playpausepend)
-                       .setStyle(new androidx.media.app.NotificationCompat.MediaStyle().setShowActionsInCompactView(0))
-                       .build();
-
-            notificationManager.notify(0, notificationn);
+                       .setStyle(new androidx.media.app.NotificationCompat.MediaStyle().setShowActionsInCompactView(0));
     }
 
     public void getfire() {
@@ -134,14 +131,16 @@ public class MainActivity extends AppCompatActivity {
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 String name1 = snapshot.getValue(String.class);
                 name = name1;
-                notifications();
+
+                notificationManager.notify(0, notificationn.build());
                 getfireimg();
             }
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
 
             }
-        });}
+        });
+    }
 
         public void getfireimg(){
         FirebaseDatabase.getInstance().getReference("home").addValueEventListener(new ValueEventListener() {
@@ -175,11 +174,7 @@ public class MainActivity extends AppCompatActivity {
             }
     });
     }
-    void changebuttoniconn()
-    {
-//        notifications();
-//        notificationManager.notify(0, notificationn);
-    }
+
     void storingmediaplayer(MediaPlayer mp)
     {
         this.mp = mp;
