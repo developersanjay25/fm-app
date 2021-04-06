@@ -56,6 +56,8 @@ public class MainActivity extends AppCompatActivity {
     Bitmap notifyimg = null;
     Intent startintent;
     MediaPlayer mp;
+    int pauseplaynoti;
+    PendingIntent playpausepend;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,6 +72,8 @@ public class MainActivity extends AppCompatActivity {
 
         fragmentManager.beginTransaction().add(R.id.frame_layout,home,"1").show(home).commit();
         fragmentManager.beginTransaction().add(R.id.frame_layout,info,"2").hide(info).commit();
+
+
 
         notificationManager = NotificationManagerCompat.from(this);
 
@@ -99,18 +103,23 @@ public class MainActivity extends AppCompatActivity {
         PendingIntent startactivity = PendingIntent.getActivity(this, 0, startintent, 0);
 
         Intent playpause = new Intent(this,pauseplay.class);
-        PendingIntent playpausepend = PendingIntent.getBroadcast(this,0,playpause,0);
+        playpausepend = PendingIntent.getBroadcast(this,0,playpause,0);
 
-        int pauseplaynoti;
+
         if (home.mp.isPlaying())
         {
             pauseplaynoti = R.drawable.ic_baseline_pause_24;
+//            notificationn.addAction(pauseplaynoti,"play",playpausepend);
+//            notificationManager.notify(0,notificationn.build());
         }
         else
         {
             pauseplaynoti = R.drawable.ic_baseline_play_arrow_24;
+//            notificationn.addAction(pauseplaynoti,"play",playpausepend);
+//            notificationManager.notify(0,notificationn.build());
         }
-        notificationn = new NotificationCompat.Builder(this)
+
+        notificationn = new NotificationCompat.Builder(this,app.CHANNEL_1)
                        .setSmallIcon(R.drawable.imggg)
                        .setAutoCancel(false)
                        .setLargeIcon(notifyimg)
@@ -122,6 +131,8 @@ public class MainActivity extends AppCompatActivity {
                        .setOngoing(true)
                        .addAction(pauseplaynoti , "Play", playpausepend)
                        .setStyle(new androidx.media.app.NotificationCompat.MediaStyle().setShowActionsInCompactView(0));
+
+            notificationManager.notify(0, notificationn.build());
     }
 
     public void getfire() {
@@ -131,16 +142,14 @@ public class MainActivity extends AppCompatActivity {
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 String name1 = snapshot.getValue(String.class);
                 name = name1;
-
-                notificationManager.notify(0, notificationn.build());
+                notifications();
                 getfireimg();
             }
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
 
             }
-        });
-    }
+        });}
 
         public void getfireimg(){
         FirebaseDatabase.getInstance().getReference("home").addValueEventListener(new ValueEventListener() {
@@ -168,11 +177,27 @@ public class MainActivity extends AppCompatActivity {
 
         }
             @Override
-            public void onCancelled(@NonNull DatabaseError error)
-            {
+            public void onCancelled(@NonNull DatabaseError error) {
 
             }
     });
+    }
+    void changebuttoniconn()
+    {
+//        notifications();
+        if (home.mp.isPlaying())
+        {
+            pauseplaynoti = R.drawable.ic_baseline_pause_24;
+//            notificationn.addAction(pauseplaynoti,"play",playpausepend);
+            notificationManager.notify(0,notificationn.build());
+            }
+        else
+        {
+            pauseplaynoti = R.drawable.ic_baseline_play_arrow_24;
+//            notificationn.addAction(pauseplaynoti,"play",playpausepend);
+            notificationManager.notify(0,notificationn.build());
+        }
+
     }
 
     void storingmediaplayer(MediaPlayer mp)

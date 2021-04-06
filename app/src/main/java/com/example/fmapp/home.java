@@ -52,12 +52,12 @@ public class home extends Fragment {
     static MediaPlayer mp;
     static MainActivity mainActivity;
     int position;
-    long seektime;
-
+    long time;
 
     @Override
     public View onCreateView(final LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.home_fragment, container, false);
+
         final ArrayList<uploadsong> mmmarraylist = new ArrayList<>();
         prog = v.findViewById(R.id.prog);
         img = v.findViewById(R.id.homeimg);
@@ -66,23 +66,21 @@ public class home extends Fragment {
         mp = new MediaPlayer();
         mainActivity = new MainActivity();
 
-        //seeking to position
-               FirebaseDatabase.getInstance().getReference("time").addValueEventListener(new ValueEventListener() {
-                                @Override
-                                public void onDataChange(@NonNull DataSnapshot snapshot) {
-                                    long songtime =snapshot.getValue(Long.class);
-                                    long seektime = System.currentTimeMillis()-songtime;
-                                    playsong(seektime);
-                                }
-                                @Override
-                                public void onCancelled(@NonNull DatabaseError error) {
+        FirebaseDatabase.getInstance().getReference("time").addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                long tim = snapshot.getValue(Long.class);
+                time = System.currentTimeMillis() - tim;
+                playsong(time);
+            }
 
-                                }
-                            });
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
 
-   new Thread(new Runnable() {
-    @Override
-    public void run() {
+            }
+
+        });
+
         DatabaseReference playlist = FirebaseDatabase.getInstance().getReference("playsongs");
         playlist.addValueEventListener(new ValueEventListener() {
             @Override
@@ -106,6 +104,7 @@ public class home extends Fragment {
 
                 System.out.println("your arraylist is : " + mmmarraylist.size());
                 Toast.makeText(getContext(), "Arraylist size  is : " + mmmarraylist.size(), Toast.LENGTH_SHORT).show();
+
                 FirebaseDatabase.getInstance().getReference("position").addValueEventListener(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot snapshot) {
@@ -115,23 +114,10 @@ public class home extends Fragment {
                         mp.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                             @Override
                             public void onCompletion(MediaPlayer mp) {
-                                FirebaseDatabase.getInstance().getReference("time").setValue(System.currentTimeMillis());
-                                if (position <= mmmarraylist.size()-1) {
-                                    FirebaseDatabase.getInstance().getReference("position").setValue(position + 1);
-                                }
-                                else
-                                {
-                                    FirebaseDatabase.getInstance().getReference("position").setValue(0);
-                                }
+                                FirebaseDatabase.getInstance().getReference("position").setValue(position+1);
                                 }
                         });
-                        if (position <= mmmarraylist.size()-1) {
-                            FirebaseDatabase.getInstance().getReference("playcurrentsong").setValue(mmmarraylist.get(position));
-                        }
-                        else
-                        {
-                            FirebaseDatabase.getInstance().getReference("position").setValue(0);
-                        }
+                        FirebaseDatabase.getInstance().getReference("playcurrentsong").setValue(mmmarraylist.get(position));
                     }
 
                     @Override
@@ -146,9 +132,8 @@ public class home extends Fragment {
 
             }
         });
-    }
-}).start();
-        playsong(000000000000);
+
+//        playsong(0000000);
         firebase();
         final MainActivity mainActivity = new MainActivity();
         mainActivity.storingmediaplayer(mp);
@@ -162,32 +147,36 @@ public class home extends Fragment {
             public void onClick(View v) {
                 if (mp.isPlaying()) {
                     player.setBackgroundResource(R.drawable.ic_baseline_play_arrow_24);
+//                    MainActivity.pauseplaynoti = R.drawable.ic_baseline_play_arrow_24;
                     mp.pause();
-//                    MainActivity.notificationn.build();
-//                    mainActivity.getfire();
+                    mainActivity.changebuttoniconn();
+                    MainActivity.notificationn.build();
                 } else {
                     player.setBackgroundResource(R.drawable.ic_baseline_pause_24);
+//                    MainActivity.pauseplaynoti = R.drawable.ic_baseline_pause_24;
                     mp.start();
-//                    MainActivity.notificationn.build();
-//                    mainActivity.getfire();
+                    mainActivity.changebuttoniconn();
+                    MainActivity.notificationn.build();
                 }
             }
         });
+
+
         return v;
     }
 
-
     public static void pauseplayer() {
+
         if (mp.isPlaying()) {
             player.setBackgroundResource(R.drawable.ic_baseline_play_arrow_24);
             mp.pause();
-//            mainActivity.getfire();
-//            MainActivity.notificationn.build();
+            MainActivity.notificationn.build();
+            mainActivity.changebuttoniconn();
         } else {
             player.setBackgroundResource(R.drawable.ic_baseline_pause_24);
             mp.start();
-//            mainActivity.getfire();
-//            MainActivity.notificationn.build();
+            MainActivity.notificationn.build();
+            mainActivity.changebuttoniconn();
         }
     }
 
@@ -234,8 +223,7 @@ public class home extends Fragment {
                             mp.setDataSource(linkk);
                             mp.prepare();
                             player.setBackgroundResource(R.drawable.ic_baseline_pause_24);
-//                            Toast.makeText(getContext(), "Seektime"+seektime, Toast.LENGTH_SHORT).show();
-                            mp.seekTo(0);
+                            mp.seekTo((int) seektime);
                             mp.start();
                         }
                         catch (IOException ex)
@@ -243,7 +231,7 @@ public class home extends Fragment {
                             Toast.makeText(getContext(), "not Ready", Toast.LENGTH_SHORT).show();
                         }
                     } else {
-                        Toast.makeText(getContext(), "Link is empty", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(getContext(), "Link is empty", Toast.LENGTH_SHORT).show();
                     }
                 }
             }
