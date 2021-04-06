@@ -109,13 +109,26 @@ public class home extends Fragment {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot snapshot) {
                         position = snapshot.getValue(Integer.class);
+                        if (position > mmmarraylist.size()-1){
+                            position = 0;
+                            FirebaseDatabase.getInstance().getReference("position").setValue(0);
+                        }
                         System.out.println(position);
                         Toast.makeText(getContext(), ""+position, Toast.LENGTH_SHORT).show();
                         mp.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                             @Override
                             public void onCompletion(MediaPlayer mp) {
+                                if (position < mmmarraylist.size()-1)
+                                {
                                 FirebaseDatabase.getInstance().getReference("position").setValue(position+1);
+                                FirebaseDatabase.getInstance().getReference("time").setValue(System.currentTimeMillis());
                                 }
+                                else
+                                {
+                                    FirebaseDatabase.getInstance().getReference("position").setValue(0);
+                                    FirebaseDatabase.getInstance().getReference("time").setValue(System.currentTimeMillis());
+                                }
+                            }
                         });
                         FirebaseDatabase.getInstance().getReference("playcurrentsong").setValue(mmmarraylist.get(position));
                     }
@@ -133,7 +146,7 @@ public class home extends Fragment {
             }
         });
 
-//        playsong(0000000);
+//        playsong();
         firebase();
         final MainActivity mainActivity = new MainActivity();
         mainActivity.storingmediaplayer(mp);
@@ -223,7 +236,15 @@ public class home extends Fragment {
                             mp.setDataSource(linkk);
                             mp.prepare();
                             player.setBackgroundResource(R.drawable.ic_baseline_pause_24);
+                            if((int) seektime < mp.getDuration()){
                             mp.seekTo((int) seektime);
+                            }
+                            else
+                            {
+                                mp.seekTo(0);
+                                FirebaseDatabase.getInstance().getReference("time").setValue(System.currentTimeMillis());
+                                FirebaseDatabase.getInstance().getReference("position").setValue(position+1);
+                            }
                             mp.start();
                         }
                         catch (IOException ex)
